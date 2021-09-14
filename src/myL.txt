@@ -1,0 +1,11 @@
+number = 10
+exp = 9
+
+[i = 9, ? i $gt 0]>
+ ? i % 2 $eq 0 > 
+  ? i $lt 5 > 
+   plus = add2(number)
+   outputplus
+  <
+ <
+<

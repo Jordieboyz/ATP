@@ -1,0 +1,53 @@
+# Program starts off with 2 "int-cells" both starting with 0. You start in c0 with 0 in it.
+
+=104o # should output 'h'
+=101o # should output 'e'
+=108o # should output 'l'
+=108o # should output 'l'
+=111o # should output 'o'
+=32o  # should output ' '
+=87o  # should output 'W'
+=111o # should output 'o'
+=114o # should output 'r'
+=108o # should output 'l'
+=100o # should output 'd'
+=33o  # should output '!'
+
+=3~=5+o  # 3+5, output 8
+
+# output 0-8
+=8
+{
+ ~/+o      #=no, for enter between the number, add this line
+ ~/-
+}
+
+
+=x , put 'x' in cell of data pointer. (when the program starts, the data pointer is on c1)
+>  , increase data pointer
+<  , decrease data pointer                             
+-  , decrease data on the data pointer with one
++x  , increment data on the data pointer with one
+{  , open loop, if data on the loop pointer
+}  , close/end loop
+o  , output data at the data pointer
+n  , a newline;'\n'
+?(expressie)  , 
+
+
+
+ #  shift cells. (if the data pointer is curently in c1, the pointer increments. if the data pointer is currently in c2, the pointer decrements)
+<  , decrease
++  , add c1 and c2 in the cell of the data pointer.
+-  , minus the values of c1 and c2. (if you're in c1, the value in c2 gets decreased in your cell. c1=4, c2=5;data pointer = 2. in this case minus means: 5-4 = 1, after: c1 = 4, c2 = 1)
+
+
+
+
+
+    
+def work(file_content : str):
+    for c in range(len(file_content)):
+        mo = opr.match(file_content, c)
+        if mo:
+            print(mo.group())
