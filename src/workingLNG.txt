@@ -1,50 +1,39 @@
-[{<NAME, <VALUE>}, {<NAME, <VALUE>}]
-
-expressions:
-
-
 bigger aspects:
-    [<VAR>, <EXPR>]{ (...) }                            these are loop formats.      
-    [<EXPR>]{ (...) }
+    [<VAR : INT>, <EXPR>]> (...) <                      these are loop formats.      
+    [<EXPR>]> (...) <
     
-    f <NAME>(<PARAMS>)-> (...) !<RETURNVALUE> <-        this is the format for a function
-
-    ? <EXPR> -> (...) <-                                this is the format for an IF-statement
+    func_ <NAME>(<PARAMS>) > (...) !<RETURNVALUE> <     this is the format for a function
+    
+    ? <EXPR> > (...) <                                  this is the format for an IF-statement
+                    
+    <VAR>=x,                                            puts x in <VAR>
+    
+weird character:
+    >,                      opening new scope
+    <,                      closing previous opened scope
+    (,                      opening paramater input for functions
+    ),                      closing parameter input for functions
+    ,                       separator
     
 expressions:
-    $eq,    ==
-    $lt,    <
-    $gt,    >
-    $let,   <=
-    $get,   >=
+    $eq,    equivalent of: ==
+    
+    $neq,   equivalent of: !=
+    
+    $lt,    equivalent of: <
+    
+    $gt,    equivalent of: >
+    
+    $let,   equivalent of: <=
+    
+    $get,   equivalent of: >=
     
     x+,   increments the data on x
-            before: [4, 0]
-            +
-            after:  [5, 0]
            
     x-,   decrements the data on x
-            before: [4, 0]
-            -
-            after: [3, 0]
             
     /x,  divides the data on x
-            before: [4, 0]
-            /2
-            after: [2, 0]
             
     *x,  multiplies the data on x
-            before: [4, 0]
-            *2
-            after: [8, 0]
-                
-    <VAR>=x,  puts x in <VAR>
-            before: [4, 0]
-            =89>=78
-            after: [89, 78]
-            
-    x%y,  put remainder x
-            before: [4, 0]
-            % 2
-            after: [0, 0]
     
+    x%y,  put remainder x    

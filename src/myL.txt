@@ -1,11 +1,34 @@
 number = 10
 exp = 9
 
-[i = 9, ? i $gt 0]>
- ? i % 2 $eq 0 > 
-  ? i $lt 5 > 
-   plus = add2(number)
-   outputplus
-  <
+[ number $gt 0]>
+   i $lt 5 > 
+   plus = sommig(number)
+   a = add2(x)
  <
+ givvvvvvvv = 9
+<
+
+
+
+#
+func_ add2 (number)>
+    result = 0
+    [ n $get 1]>
+        [ i $gt 0]> 
+            ressssult + 1 
+        <
+    exppp - 1
+    <
+<
+
+
+func_ sommig (number)>
+    result = 0
+    [ n $get 1]>
+        [ i $gt 0]> 
+            ressssult + 1 
+        <
+    affffff - 1
+    <
 <

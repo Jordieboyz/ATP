@@ -1,6 +1,10 @@
 import re
-from tokens import Token
-
+from typing import List
+from tokens import Token, Func, Number, Variable, Is, If, ExprIfStatement, \
+                   StartIfStatement, CloseFuncParam, OpenFuncParam, Comma, \
+                   Add, Minus, Divide, Times, Modulo, OpenLoop, CloseLoop, \
+                   StartExprLoop, EndExprLoop, tokendict
+                  
 def is_number(c : chr):
     return re.compile(r'[0-9]').match(c)
                  
@@ -8,82 +12,54 @@ def is_alpha_char( c: chr):
     return re.compile(r'[a-z]|[A-Z]').match(c)
 
 def char_expr( expr : chr):
-    return expr in r'={}&+-?/*()[]<>'
+    return expr in r'={}&+-?/*()[]<>%,$'
 
-def if_expr( expr: str, sidx : int, eidx : int ):
-    return re.compile(r'\$eq|\$gt|\$lt|\$get|\$let').match(expr, sidx, eidx)
+def lex_it( file_string : str, tokenlist, tmp : str):
+    def add_var_or_number_token():
+        if tmp:
+            tokenlist.append(Number(tmp)) if is_number(tmp[0]) else tokenlist.append(Variable(tmp))
+            return True
+        return False
     
-class Lexer:
-    def __init__(self, file_content : str):
-        self.file_content = file_content
-        self.cur_pos = -1
-        self.cur_char = None
-        self.next_pos()
-    
-    def next_pos(self):
-        self.cur_pos += 1
-        if self.cur_pos < len(self.file_content): 
-            self.cur_char = self.file_content[self.cur_pos]
-
-    def create_tokens(self):
-        tokenlist = []
-        tmp = ''
-        skip_chars = 0
-        
-        def add_number_or_var_token(content : str):
-            if content: 
-                if is_number(content[0]):
-                    tokenlist.append(Token("NUMBER", content))
-                else:
-                    tokenlist.append(Token("VARIABLE", content))
-
-        for idx in range(len(self.file_content)):
-            if skip_chars != 0:
-                skip_chars -= 1
-                self.next_pos()
-                continue
-                
-            if self.cur_char in ' \t\n':
-                add_number_or_var_token(tmp)
-                tmp = ''
-                
-            elif self.cur_char == '$':
-               add_number_or_var_token(tmp)
-               tmp = ''
-               expr = if_expr(self.file_content, idx, idx + 4)
-               if expr:
-                   tokenlist.append(Token("EXPRESSION", expr.group()))
-                   skip_chars = len(expr.group())
-                    
-            elif is_number(self.cur_char):
-                tmp += self.cur_char  
-            
-            elif is_alpha_char(self.cur_char):
-                tmp += self.cur_char
-                
-            elif char_expr(self.cur_char):
-                add_number_or_var_token(tmp)
-                tmp = ''
-                if self.cur_char == '?':
-                    tokenlist.append(Token("IF_STATEMENT", self.cur_char))
-                else:    
-                    tokenlist.append(Token("EXPRESSION", self.cur_char))
-
-            self.next_pos()
-
-        add_number_or_var_token(tmp)
+    if not file_string:
         return tokenlist
+
+    c, *rest = file_string 
+    
+    if c in '#_':
+        return tokenlist
+    
+    if c in ' \t\n':
+        if add_var_or_number_token():
+            tmp = ''
             
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
+    elif is_number(c) or is_alpha_char(c):
+        tmp += c  
+    
+    elif char_expr(c):
+        if add_var_or_number_token():
+            tmp = ''
+        if c in tokendict:   
+            tokenlist.append(tokendict[c]())
+   
+    return lex_it(rest, tokenlist, tmp)
+                   
+def finish_lexing(tokens: List[Token], idx : int):
+    if not idx < len(tokens):
+        return tokens
+    
+    # Variable + OpenFuncParam == Func
+    if isinstance(tokens[idx], OpenFuncParam):
+        tokens[idx - 1] = Func(tokens[idx - 1].content)
+    
+    # fix the "$-exprsessions" f.e.  ($) + (eq) or ($) + (lt)        
+    if isinstance(tokens[idx], ExprIfStatement):
+        tokens[idx].expr = tokens[idx + 1].content
+        del tokens[idx + 1]
+    return finish_lexing(tokens, idx + 1)
+        
+def lex(file_str : str, start_from : int = 0):
+    tokens = lex_it(file_str[start_from:], [], '')
+    return finish_lexing(tokens, 0)
+
+

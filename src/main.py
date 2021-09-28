@@ -1,16 +1,11 @@
-from tokens import Token
 from functools import reduce
 from progState import ProgramState
-from lexer import Lexer
+from lexer import lex
+import re
+from Parser import Parse
 
 FILE = "myL.txt"
 
-file = open(FILE, "r")
-file_content = file.readlines()
+content = reduce(lambda x, y: x + y, open(FILE, "r").readlines())
 
-content = reduce(lambda x, y: x + y, file_content)
-
-tokens = Lexer(content).create_tokens()
-
-for token in tokens:
-    print(token)
+print(Parse(lex(content), content.split('#')[1])[1])
