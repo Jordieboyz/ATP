@@ -1,11 +1,13 @@
 from functools import reduce
-from progState import ProgramState
 from lexer import lex
-import re
 from Parser import Parse
+import sys
+sys.setrecursionlimit(200000)
 
-FILE = "myL.txt"
+FILE_NAME = "myL.txt"
 
-content = reduce(lambda x, y: x + y, open(FILE, "r").readlines())
+content = reduce(lambda x, y: x + y, open(FILE_NAME, "r").readlines())
 
-print(Parse(lex(content), content.split('#')[1])[1])
+lexed = lex(content)
+empty, parsed = Parse(lexed, content.split('#')[1])
+print(parsed)

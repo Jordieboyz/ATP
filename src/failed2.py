@@ -16,6 +16,7 @@ st_dict : dict() = {
     OpenLoop          : lambda : OpenScope(),
     CloseLoop         : lambda : CloseScope(),
     StartExprLoop     : lambda : ConditionsLoop(),
+    OpenFuncParam     : lambda : OpenScope(),
     Func              : lambda n : Function(n),
     Return            : lambda : ReturnFunc()
 }
@@ -126,66 +127,54 @@ class ReturnFunc(Statement):
         return self.__str__()
 
 
-def parseTokensToStatements(tokenlist : List[Token], statementlist : List[Statement], last_token : Token, cur_statement : Statement, func_list):
+def parseTokensToStatements(tokenlist : List[Token], statementlist : List[Statement], last_token : Token, func_list):
     if not tokenlist:
         return None, statementlist
+    
     append = lambda l, x: l if l.append(x) is None else l
-    remove = lambda l, x: l if l.remove(x) is None else l
+    
     token, *rest = tokenlist
     
-    if cur_statement is not None:
-        if isinstance(cur_statement, Function) and isinstance( last_token, OpenFuncParam):
-            if not isinstance(token, CloseFuncParam): 
-                cur_statement.func_params.append(token)
-                return parseTokensToStatements(rest, statementlist, last_token, cur_statement, func_list)
-            else:
-                
-                
-                cur_statement.func_params = parseTokensToStatements(cur_statement.func_params, [], None, cur_statement, None)[1]
-                
-                tokens = list(filter(None, map( lambda x, y: x[1] if x[0] == y else None , func_list, [cur_statement.funcname]*len(func_list))))
-                if tokens:
-                    cur_statement.func_scope = parseTokensToStatements(tokens[0], [], None, None, func_list)[1]
+    if statementlist:
+        if isinstance( statementlist[-1], (MathStatement, IfStatement)):
+            if statementlist[-1].rvalue is None:
+                if not isinstance( token, (Func, OpenFuncParam)):
+                    statementlist[-1].rvalue = token
     
-                if isinstance( statementlist[-1], (MathStatement, IfStatement, ReturnFunc)):
-                    if statementlist[-1].rvalue is None:
-                        statementlist[-1].rvalue = cur_statement
-                        return parseTokensToStatements(rest, statementlist, token, None, func_list)
-                return parseTokensToStatements(rest, append(statementlist, cur_statement), token, None, func_list)
-  
-
-    if isinstance( token, (Variable, Number)):
-        if isinstance( cur_statement, (IfStatement, MathStatement, ReturnFunc)):
-            if cur_statement.rvalue is None:
-                cur_statement.rvalue = token
-                return parseTokensToStatements(rest, statementlist, token, None, func_list)
         
-    if func_list is None:
-        if isinstance(token, (Variable, Number)):
-            return parseTokensToStatements(rest, append(statementlist, token), token, cur_statement, func_list)
-        elif isinstance( token, (Is, Add, Minus, Times, Divide, Modulo, ExprIfStatement) ):
-            return parseTokensToStatements(rest, remove(append(statementlist, st_dict[type(token)](last_token, token, None)), statementlist[-2]), token, statementlist[-1], func_list)
         
+    if isinstance( token, (Is, Add, Minus, Times, Divide, Modulo, ExprIfStatement) ):
+        return parseTokensToStatements(rest, append(statementlist, st_dict[type(token)](last_token, token, None)), token, func_list)
+    
+    elif isinstance(token, (StartExprLoop, OpenLoop, CloseLoop, Return)):
+        return parseTokensToStatements(rest, append(statementlist, st_dict[type(token)]()), token, func_list)
+        
+    elif isinstance(token, OpenFuncParam):
+        if isinstance(last_token, Func):
+            return parseTokensToStatements(rest, append(statementlist, st_dict[type(last_token)](last_token.content)), token, func_list)
+    
+    elif isinstance(token, CloseFuncParam):
+        if isinstance(statementlist[-1], Function) :
+            if not statementlist[-1].func_scope:
+                tokens = list(filter(None, map( lambda x, y: x[1] if x[0] == y else None , func_list, [statementlist[-1].funcname]*len(func_list))))
+                if tokens:
+                    statementlist[-1].func_scope = parseTokensToStatements(tokens[0], [], None, func_list)[1]           
+                    if isinstance(statementlist[-2], (MathStatement, ReturnFunc)):
+                        if statementlist[-2].rvalue is None:
+                            statementlist[-2].rvalue = statementlist[-1]
+                            del statementlist[-1]
+                
     elif isinstance(token, EndExprLoop):
         if isinstance( statementlist[-1], IfStatement) and isinstance(statementlist[-2], ConditionsLoop):
             statementlist[-2].expr = statementlist[-1]
-            del statementlist[-1]        
-        
-    elif isinstance( token, (Is, Add, Minus, Times, Divide, Modulo, ExprIfStatement) ):
-        return parseTokensToStatements(rest, append(statementlist, st_dict[type(token)](last_token, token, None)), token, statementlist[-1], func_list)
+            del statementlist[-1]
     
-    elif isinstance(token, (StartExprLoop, OpenLoop, CloseLoop)):
-        return parseTokensToStatements(rest, append(statementlist, st_dict[type(token)]()), token, None, func_list)
-    
-    elif isinstance(token, Return):
-        return parseTokensToStatements(rest, append(statementlist, st_dict[type(token)]()), token, statementlist[-1], func_list)
-    
-    elif isinstance(token, OpenFuncParam):
-        if isinstance(last_token, Func):
-            return parseTokensToStatements(rest, statementlist, token, st_dict[type(last_token)](last_token.content), func_list)
-        
-    
-    return parseTokensToStatements(rest, statementlist, token, cur_statement, func_list) 
+    elif isinstance(token, (Variable, Number)):
+        if statementlist and isinstance(statementlist[-1], Function):
+            if isinstance(last_token, (OpenFuncParam, Comma)):
+                statementlist[-1].func_params.append(token)
+   
+    return parseTokensToStatements(rest, statementlist, token, func_list)
 
 
 def parseInScopes(statementlist : List[Statement], cur_scope : Scope):
@@ -213,8 +202,7 @@ def parseInScopes(statementlist : List[Statement], cur_scope : Scope):
  
 import re
 def Parse(tokenlist : List[Token], function_string : str = None):
-    s = parseTokensToStatements(tokenlist, [], None, None, init_functions([], function_string))
-    return parseInScopes(s[1], Scope())
+    return parseInScopes(parseTokensToStatements(tokenlist, [], None, init_functions([], function_string))[1], Scope())
 
 def init_functions(function_list : List, function_content : str):
     return list(map( lambda x: (x.group()[6:], lex(function_content, x.start() + len('func_'))[4:]),                                                   \

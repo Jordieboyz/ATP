@@ -1,34 +1,17 @@
 number = 10
 exp = 9
 
-[ number $gt 0]>
+[ number $gt 0 ]>
    i $lt 5 > 
-   plus = sommig(number)
-   a = add2(x)
+   sommig(3, number+9)
+   a = add2(x+1, 6)
+   odd(3, 5)
  <
  givvvvvvvv = 9
 <
 
-
-
 #
-func_ add2 (number)>
-    result = 0
-    [ n $get 1]>
-        [ i $gt 0]> 
-            ressssult + 1 
-        <
-    exppp - 1
-    <
-<
-
-
-func_ sommig (number)>
-    result = 0
-    [ n $get 1]>
-        [ i $gt 0]> 
-            ressssult + 1 
-        <
-    affffff - 1
-    <
+func_ odd(n)>
+    n $eq 0 > .0 <
+    .odd2(n-1)
 <

@@ -14,6 +14,7 @@ tokendict : dict() = {
     '[' : lambda: StartExprLoop(),
     ']' : lambda: EndExprLoop(),
     '?' : lambda: StartIfStatement(),
+    '.' : lambda: Return()
     }
 
 class Token:
@@ -105,13 +106,6 @@ class OpenFuncParam(Token):
     
     def __repr__(self):
         return self.__str__()
-    
-class Comma(Token):
-    def __str__(self):
-        return type(self).__name__
-    
-    def __repr__(self):
-        return self.__str__()
 
 class Add(Token):
     def __str__(self):
@@ -120,7 +114,21 @@ class Add(Token):
     def __repr__(self):
         return self.__str__()
     
+class Comma(Token):
+    def __str__(self):
+        return type(self).__name__
+    
+    def __repr__(self):
+        return self.__str__()
+    
 class Minus(Token):
+    def __str__(self):
+        return type(self).__name__
+    
+    def __repr__(self):
+        return self.__str__()
+    
+class Return(Token):
     def __str__(self):
         return type(self).__name__
     

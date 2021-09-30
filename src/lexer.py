@@ -1,26 +1,12 @@
-import re
 from typing import List
-from tokens import Token, Func, Number, Variable, Is, If, ExprIfStatement, \
-                   StartIfStatement, CloseFuncParam, OpenFuncParam, Comma, \
-                   Add, Minus, Divide, Times, Modulo, OpenLoop, CloseLoop, \
-                   StartExprLoop, EndExprLoop, tokendict
-                  
-def is_number(c : chr):
-    return re.compile(r'[0-9]').match(c)
-                 
-def is_alpha_char( c: chr):
-    return re.compile(r'[a-z]|[A-Z]').match(c)
+from tokens import Token, Func, Number, Variable, ExprIfStatement, \
+                   OpenFuncParam, tokendict
 
-def char_expr( expr : chr):
-    return expr in r'={}&+-?/*()[]<>%,$'
+def char_expr( expr : chr ):
+    return expr in r'=+-*()[]<>%$,.'
 
-def lex_it( file_string : str, tokenlist, tmp : str):
-    def add_var_or_number_token():
-        if tmp:
-            tokenlist.append(Number(tmp)) if is_number(tmp[0]) else tokenlist.append(Variable(tmp))
-            return True
-        return False
-    
+
+def lex_it( file_string : str, tokenlist : List[Token], tmp : str):
     if not file_string:
         return tokenlist
 
@@ -30,14 +16,16 @@ def lex_it( file_string : str, tokenlist, tmp : str):
         return tokenlist
     
     if c in ' \t\n':
-        if add_var_or_number_token():
+        if tmp:
+            tokenlist.append(Number(tmp)) if tmp[0].isnumeric() else tokenlist.append(Variable(tmp))
             tmp = ''
             
-    elif is_number(c) or is_alpha_char(c):
+    elif c.isnumeric() or c.isalpha():
         tmp += c  
     
     elif char_expr(c):
-        if add_var_or_number_token():
+        if tmp:
+            tokenlist.append(Number(tmp)) if tmp[0].isnumeric() else tokenlist.append(Variable(tmp))
             tmp = ''
         if c in tokendict:   
             tokenlist.append(tokendict[c]())
