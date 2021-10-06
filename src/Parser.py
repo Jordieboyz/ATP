@@ -34,6 +34,7 @@ class Scope:
         return self
     
     def __str__(self):
+        return self.statements.__str__()
         nstr = repeatStr("   ", self.nestlevel)
         statestr = ''.join(map(lambda st: nstr + str(st) + "\n", self.statements))
         return "Begin Scope: \n" + statestr + repeatStr("   ", self.nestlevel - 1) + "End Scope"
