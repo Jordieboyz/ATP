@@ -8,6 +8,10 @@ FILE_NAME = "myL.txt"
 content = reduce(lambda x, y: x + y, open(FILE_NAME, "r").readlines())
 
 lexed = lex(content)
-empty, parsed = Parse(lexed, content.split('#')[1])
+# print(lexed)
+# , content.split('#')[1]
+empty, parsed = Parse(lexed)
 
+
+# print(parsed)
 print(runCode(parsed, 0, ProgramState(), None))

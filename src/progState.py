@@ -9,12 +9,12 @@ exec_dict = {
     Times : "*=",
     Divide : "/=",
     Modulo : "%",
-    'eq' : '==',
-    'neq' : '!=',
-    'gt' : '>',
-    'get' : '>=',
-    'lt' : '<',
-    'let' : '<=',
+    'eq' : lambda l, r: l == r ,
+    'neq' : lambda l, r: l != r,
+    'gt' : lambda l, r: l > r,
+    'get' : lambda l, r: l >= r,
+    'lt' : lambda l, r: l < r,
+    'let' : lambda l, r: l <= r,
 }
 
 
@@ -41,50 +41,28 @@ class ProgramState:
                     if isinstance( operator, Is):
                         self.cells[name.content] = int(value.content)
                     elif name.content in self.cells:
-                        exec(make_exec('self.cells[name.content]', exec_dict[type(operator)] , 'int(value.content)'))
+                        if type(operator) in exec_dict: 
+                            exec(make_exec('self.cells[name.content]', exec_dict[type(operator)] , 'int(value.content)'))
                         
                 elif isinstance(value, Variable):
                     if value.content in self.cells:
                         if isinstance( operator, Is ):
                             self.cells[name.content] = self.cells[value.content]
                         elif name.content in self.cells:
-                            exec(make_exec('self.cells[name.content]', exec_dict[type(operator)] , 'self.cells[value.content]'))
+                            if type(operator) in exec_dict:
+                                exec(make_exec('self.cells[name.content]', exec_dict[type(operator)] , 'self.cells[value.content]'))
 
-                        
     def evaluate_expr(self, expr):
         if not self.returned:
-            if isinstance(expr, ConditionsLoop):
-                if isinstance(expr.expr.lvalue, Variable):
-                    if expr.expr.lvalue.content in self.cells:
-                        if isinstance( expr.expr.rvalue, Number ):
-                            if expr.expr.operator.expr == 'gt':
-                                return self.cells[expr.expr.lvalue.content] > int(expr.expr.rvalue.content)
-                            if expr.expr.operator.expr == 'lt':
-                                return self.cells[expr.expr.lvalue.content] < int(expr.expr.rvalue.content)
-                            if expr.expr.operator.expr == 'eq':
-                                return self.cells[expr.expr.lvalue.content] == int(expr.expr.rvalue.content)
-                            if expr.expr.operator.expr == 'neq':
-                                return self.cells[expr.expr.lvalue.content] != int(expr.expr.rvalue.content)
-                            if expr.expr.operator.expr == 'get':
-                                return self.cells[expr.expr.lvalue.content] >= int(expr.expr.rvalue.content)
-                            if expr.expr.operator.expr == 'let':
-                                return self.cells[expr.expr.lvalue.content] <= int(expr.expr.rvalue.content)
-            # else:
-            elif isinstance(expr.lvalue, Variable):
+            if isinstance(expr.lvalue, Variable):
                 if expr.lvalue.content in self.cells:
                     if isinstance( expr.rvalue, Number ):
-                        if expr.operator.expr == 'gt':
-                            return self.cells[expr.lvalue.content] > int(expr.rvalue.content)
-                        if expr.operator.expr == 'lt':
-                            return self.cells[expr.lvalue.content] < int(expr.rvalue.content)
-                        if expr.operator.expr == 'eq':
-                            return self.cells[expr.lvalue.content] == int(expr.rvalue.content)
-                        if expr.operator.expr == 'neq':
-                            return self.cells[expr.lvalue.content] != int(expr.rvalue.content)
-                        if expr.operator.expr == 'get':
-                            return self.cells[expr.lvalue.content] >= int(expr.rvalue.content)
-                        if expr.operator.expr == 'let':
-                            return self.cells[expr.lvalue.content] <= int(expr.rvalue.content)
+                        if expr.operator.expr in exec_dict:
+                            return exec_dict[expr.operator.expr](self.cells[expr.lvalue.content], int(expr.rvalue.content))
+
+
+# def evaluate_if(state,)
+
                     
 def runLoop( scope, state : ProgramState, output ):
     print(state)
@@ -103,13 +81,11 @@ def runScope( scope, state : ProgramState, output ):
         else:
             return runCode(scope, 0, state, output)
 
-# def runScope( scope)
 def runCode(code, ptr : int, state : ProgramState,  output):
     if(ptr >= len(code.statements)):
         return state, output
     
     cur = code.statements[ptr]
-    state.codePtr = ptr
     
     # print("\ncur ptr: ", ptr, end='\n')
     # for i in range(len(code.statements)):
@@ -135,8 +111,8 @@ def runCode(code, ptr : int, state : ProgramState,  output):
             return runCode(code, ptr + 2, state, output)
 
     elif isinstance( cur, ConditionsLoop):
-        if state.evaluate_expr( cur ) :
-            state.cur_loop = cur
+        if state.evaluate_expr( cur.expr ) :
+            state.cur_loop = cur.expr
             return runCode(code , ptr + 1, state, output)
         else:
             return runCode(code, ptr + 2, state, output)
@@ -160,7 +136,10 @@ def runCode(code, ptr : int, state : ProgramState,  output):
 
 
 
-
+import re
+def init_functions(function_list : List, function_content : str):
+    return list(map( lambda x: (x.group()[6:], lex(function_content, x.start() + len('func_'))[4:]),    \
+                   list( re.finditer(r'func_ (\w+)', function_content )))) 
 
 
 

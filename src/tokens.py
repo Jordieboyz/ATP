@@ -15,7 +15,7 @@ tokendict : dict() = {
     ']' : lambda: EndExprLoop(),
     '?' : lambda: StartIfStatement(),
     '.' : lambda: Return()
-    }
+   }
 
 class Token:
     def __init__(self, content : str = ''):
