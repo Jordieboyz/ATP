@@ -1,25 +1,30 @@
-number = 0
-exp = 0
+f = 10
+l = 11
+n = 10
 
-[ number $lt 20 ]>
-    exp $eq 10 > 
-        .1 
-    <
-    number $gt 6 >
-        number + 2  
-    <
-    number $let 6 >
-        number + 1
-    <
-    exp + 1
-<
+.sommig(n)
+
+
 #
 
 func_ sommig(n)>
     result = 0
-    [n $get 1]>
+    [n $get 1] >
         result + n
         n - 1
     <
     .result
+<
+
+func_ odd(r)>
+    r  $eq 0> .0 <
+    r - 1 
+    .even(r)
+<
+
+func_ even(result)>
+    result $eq 0 > .1 < 
+    result - 1
+    .odd(result)
+    <
 <

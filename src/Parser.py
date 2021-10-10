@@ -17,7 +17,8 @@ st_dict : dict() = {
     CloseLoop         : lambda : CloseScope(),
     StartExprLoop     : lambda : ConditionsLoop(),
     Func              : lambda n : Function(n),
-    Return            : lambda : ReturnFunc()
+    Return            : lambda : ReturnFunc(),
+    OpenFuncParam     : lambda n : Function(n) 
 }
     
 class Statement():
@@ -82,6 +83,7 @@ class Function(Statement):
         self.func_params = []
         self.func_scope = []
         self.ret_val = None
+        self.returned = False
         
     def __str__(self):
         return "{} {} with {} \t{}".format(type(self).__name__, self.funcname, self.func_params, self.func_scope.__str__())
@@ -144,6 +146,9 @@ def parseTokensToStatements(tokenlist : List[Token], statementlist : List[Statem
 
     token, *rest = tokenlist
     
+    # print("\ncur_token: ", token)
+    # print("statementlist: ", statementlist)
+    # print("cur_statement: ", cur_statement)
     # This part of the function adds fucntion parameters to a certain function and and if the current 
     # token is a Token::CloseFunParam, the completed fucntion gets added to the List[Statement] or to the Statement::Mathstatement if it needs an rvalue
     if cur_statement is not None:
@@ -152,16 +157,11 @@ def parseTokensToStatements(tokenlist : List[Token], statementlist : List[Statem
                 cur_statement.func_params.append(token)
                 return parseTokensToStatements(rest, statementlist, last_token, cur_statement)
             else:
-                # cur_statement.func_params = parseTokensToStatements(cur_statement.func_params, [], None, cur_statement, None)[1]
-                
-            #     tokens = list(filter(None, map( lambda x, y: x[1] if x[0] == y else None , func_list, [cur_statement.funcname]*len(func_list))))
-            #     if tokens:
-            #         cur_statement.func_scope = parseTokensToStatements(tokens[0], [], None, None, func_list)[1]
-    
-                if isinstance( statementlist[-1], (MathStatement, IfStatement, ReturnFunc)):
-                    if statementlist[-1].rvalue is None:
-                        statementlist[-1].rvalue = cur_statement
-                        return parseTokensToStatements(rest, statementlist, token, None)
+                if len(statementlist) > 1:
+                    if isinstance( statementlist[-1], (MathStatement, IfStatement, ReturnFunc)):
+                        if statementlist[-1].rvalue is None:
+                            statementlist[-1].rvalue = cur_statement
+                            return parseTokensToStatements(rest, statementlist, token, None)
                 return parseTokensToStatements(rest, append(statementlist, cur_statement), token, None)
   
     
@@ -223,7 +223,10 @@ def parseInScopes(statementlist : List[Statement], cur_scope : Scope):
     return parseInScopes(rest, cur_scope.add_statement(statement))
  
 # Parse :: List[Token] -> String -> List[Statement]
-def Parse(tokenlist : List[Token]):
+def Parse(tokenlist : List[Token], last_token :Token = None):
+    # if last_token is not None:
+        # return parseInScopes(parseTokensToStatements(tokenlist, [], last_token, None)[1], Scope())
+    # else:
     return parseInScopes(parseTokensToStatements(tokenlist, [], None, None)[1], Scope())
 
                                                    
