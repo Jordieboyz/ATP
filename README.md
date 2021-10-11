@@ -38,6 +38,7 @@ Below, you could read all the operators in my language and their syntax.
 
 math-operators:
     myLanguage           synnonym
+    
         =         ->        =
             -> a = 3
             -> a = b
@@ -64,6 +65,7 @@ math-operators:
             -> a / func(n)
 
 if-expressions:
+
         $eq       ->        ==
         $neq      ->        !=
         $gt       ->        >
@@ -72,6 +74,7 @@ if-expressions:
         $let      ->        >=
 
 bigger-operations:
+
     [ <EXPR> ]> (...) <                                   this is the loop-format.      
     
     func_ <NAME>(<PARAMS>) > (...) .<RETURNVALUE> <      this is the format for a function
@@ -79,6 +82,7 @@ bigger-operations:
     <EXPR> > (...) <                                     this is the format for an IF-statement
             
 all characters and their fucntion:
+
     =   assign
     +   add
     -   minus
