@@ -1,7 +1,7 @@
 from typing import List
 from Parser import MathStatement
-from tokens import Is, Number, Variable, Add, Minus ,Times, Divide, Modulo, Token, CloseLoop, OpenLoop
-from Parser import Parse, ConditionsLoop, IfStatement, Scope, ReturnFunc, parseTokensToStatements, Function, Scope,parseInScopes
+from tokens import Is, Number, Variable, Add, Minus ,Times, Divide, Modulo, CloseLoop, OpenLoop
+from Parser import Parse, ConditionsLoop, IfStatement, ReturnFunc, Function, Scope
 
 
 exec_dict = {
@@ -28,6 +28,7 @@ class ProgramState:
         self.scope_vars = []
         self.returned = False
         self.func_list = func_list
+        
         
     def __str__(self) -> str:
         return self.cells.__str__()
@@ -87,10 +88,24 @@ class ProgramState:
                             return exec_dict[expr.operator.expr](self.cells[expr.lvalue.content], int(expr.rvalue.content))
 
 
+# This function creates and runs the scope. until this point, the Lexer and Parser both don't no anything about
+# the declaration of the function. This is what this function does and immediately "runs"  this scope
+# runFunction :: ProgramState -> Int -> (ProgramState, Int)
 def runFunction( state: ProgramState, output : int):
     if isinstance(state.cur_func, Function):
         if len(state.cur_func.func_scope.statements) == 0:
+            
+            # This is absolutely not functional, I know, but I had a very hard time fixing it another way...
+            # this searches for the name of the func in the List::state.func_list[Tuple(String, List[Token])] to combine them.
+            # This is a very complicated line, but the function of it is pretty simple
+            
+            # In the "main" of this project, I "pre-compiled" my functions. I Lexed all my function declarations and combined that with a string (the name of the function) in a Tuple..
+            # So I could easily search for the declaration of a certain function and just this line combined the function the runner found with one of the "pre-compiled" functions.
             f = list(filter(None, map( lambda x, y: x[1] if x[0] == y else None , state.func_list, [state.cur_func.funcname]*len(state.func_list))))[0]
+            
+            # This is unfortunately needed...mosstly because I couldn't figure out a better way of fixing it.
+            # The "pre-compiled" functions all had one scope too much and the program couldn't work with that, so I had to 
+            # "manually" remove the outter loop (this is just to start the function scope).
             if isinstance(f[4], OpenLoop):
                 del f[4]
                 if isinstance(f[-1], CloseLoop):
@@ -114,16 +129,24 @@ def runFunction( state: ProgramState, output : int):
             
         return runCode(state.cur_func.func_scope, 0, state_, output_)
 
+# This function functions like a while loop in c++. You have a condidion and constantly checked every cycle. 
+# So, we check if the condition is True other wise we continue in the loop
 
-def runLoop( scope, state : ProgramState, output ):
+# runLoop :: Scope -> ProgramState -> Int -> (ProgramState, Int)
+def runLoop( scope : Scope, state : ProgramState, output : int ):
     if state.cur_loop is not None:
         if not state.evaluate_expr(state.cur_loop) or output is not None:
             return state, output
         else:
             state_, output_ = runCode(scope, 0, state, output)
             return runLoop(scope, state_, output_)
-        
-def runScope( scope, state : ProgramState, output ):
+
+
+# This function just runs one loop. f.e. an if-statement. An if-statement always had a scope.
+# To run just that one scope, you use this function. It is very similar to the function above, but for clearance purpose, I separated them.
+
+# runLoop :: Scope -> ProgramState -> Int -> (ProgramState, Int)        
+def runScope( scope : Scope, state : ProgramState, output  : int):
     if state.last_statement is not None:
         if not state.evaluate_expr(state.last_statement) or output is not None:
             return state, output
@@ -132,7 +155,10 @@ def runScope( scope, state : ProgramState, output ):
     else:
         return runCode(scope, 0, state, output)
 
-def runCode(code, ptr : int, state : ProgramState,  output):
+# This is the runner. The runner loops through the list the parser created and tries to execute the statements.
+
+# runLoop :: Scope -> Int -> ProgramState -> Int -> (ProgramState, Int)
+def runCode(code : Scope, ptr : int, state : ProgramState,  output : int):
     if(ptr >= len(code.statements)):
         return state, output
     
@@ -141,26 +167,25 @@ def runCode(code, ptr : int, state : ProgramState,  output):
             return state, output
         
     cur = code.statements[ptr]
-    # print("\ncur ptr: ", ptr, end='\n')
-    # for i in range(len(code.statements)):
-    #     print(i,".  ", code.statements[i], end='\n')
-    # print(state)
-    # print("returned: ", state.returned)
+
     
+    # A MathStatement is just a statement with the =, -, +, *, % or / operator.    
     if isinstance( cur, MathStatement):
+        
+        # here, We check if the rvalue of the statement is a Function.
         if isinstance(cur.rvalue, Function):
             state.cur_func = cur.rvalue
             state_, output_ = runFunction(state, output)
-            if state_.cur_func.ret_val is not None:
-                state_.op_on_var(cur.lvalue, cur.operator, state_.cur_func.funcname)
+            if output_ is not None:
+                state_.add_to_mem(cur.lvalue, Number(output_))
                 state_.cur_func = None
                 return runCode( code, ptr + 1, state_, output_)
         else:  
             state.op_on_var(cur.lvalue, cur.operator, cur.rvalue)
         return runCode( code, ptr + 1, state, output)
     
+    # Here, if the current statement is a fucntion statement, we run the "runfunction" and run the scope of the current function
     elif isinstance( cur, Function):
-        
         state.add_to_mem(Variable(cur.funcname))
         state.cur_func = cur
 
@@ -169,6 +194,9 @@ def runCode(code, ptr : int, state : ProgramState,  output):
         state.cur_func = None
         return runCode(code, ptr + 1, state_, None)
         
+    
+    # The '.'-symbol symbolizes a return out of a function f.e.. There are different return values. just a Number, a Variable, but also a Function (recursion f.e.)
+    # We need to handle at least all of these.
     elif isinstance( cur, ReturnFunc):
         if isinstance(cur.rvalue , Function):
             state.add_to_mem(Variable(cur.rvalue.funcname))
@@ -189,16 +217,14 @@ def runCode(code, ptr : int, state : ProgramState,  output):
                     else:
                         state.cur_func.ret_val = state.cells[cur.rvalue.content]
                         return runCode(code, ptr + 1, state, state.cells[cur.rvalue.content])
-       
         elif isinstance(cur.rvalue, Number):
-
             state.returned = True
             return runCode(code, ptr + 1, state, int(cur.rvalue.content))
         elif isinstance(cur.rvalue, Variable):
-
             state.returned = True
             return runCode(code, ptr + 1, state, state.cells[cur.rvalue.content])
-        
+    
+    # If the current statement is an ifstatement, we evaluate it and based on the result we continue or skip the next statement.
     elif isinstance( cur, IfStatement):
         if state.evaluate_expr( cur ) :
             state.last_statement = cur
@@ -206,6 +232,7 @@ def runCode(code, ptr : int, state : ProgramState,  output):
         else:
             return runCode(code, ptr + 2, state, output)
 
+    # This is de indication of the "c++ while loop".
     elif isinstance( cur, ConditionsLoop):
         if state.evaluate_expr( cur.expr ) :
             state.cur_loop = cur.expr
@@ -213,6 +240,7 @@ def runCode(code, ptr : int, state : ProgramState,  output):
         else:
             return runCode(code, ptr + 2, state, output)
     
+    # Here, we run a scope based on the statement which indicates the start of a scope.
     elif isinstance( cur, Scope):
         if isinstance( code.statements[ptr - 1], IfStatement):
             state_, output_ = runScope(cur, state, None)
@@ -221,8 +249,4 @@ def runCode(code, ptr : int, state : ProgramState,  output):
             state_, output_ = runLoop(cur, state, None)
             return runCode(code, ptr + 1, state_, output_)
     else:    
-        return runCode(code, ptr + 1, state, output)
-
-    # 
-    
-    
+        return runCode(code, ptr + 1, state, output)    

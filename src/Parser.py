@@ -1,5 +1,4 @@
 from typing import List
-from lexer import lex
 from tokens import Token, Func, Number, Variable, Is, ExprIfStatement, \
                    CloseFuncParam, OpenFuncParam, \
                    Add, Minus, Divide, Times, Modulo, OpenLoop, CloseLoop, \
@@ -36,18 +35,9 @@ class Scope:
     
     def __str__(self):
         return self.statements.__str__()
-        nstr = repeatStr("   ", self.nestlevel)
-        statestr = ''.join(map(lambda st: nstr + str(st) + "\n", self.statements))
-        return "Begin Scope: \n" + statestr + repeatStr("   ", self.nestlevel - 1) + "End Scope"
     
     def __repr__(self):
         return self.__str__()
-
-#repeatStr :: String -> Integer -> String
-def repeatStr(s : str, i : int):
-    if (i <= 0):
-        return ""
-    return s + repeatStr(s, i - 1)
 
 
 class MathStatement(Statement):
@@ -128,6 +118,17 @@ class ReturnFunc(Statement):
     def __repr__(self):
         return self.__str__()
 
+class Output(Statement):
+    def __init__(self):
+        self.rvalue = None
+        
+    def __str__(self):
+        return "{} with: {}". \
+            format(type(self).__name__, self.rvalue)
+    
+    def __repr__(self):
+        return self.__str__()
+
 
 # These 2 functions append or remove an item frmo the list. I would have done this inline IF the "append" or "remove" function
 # returned itself. Unfortunately, they don't so I have to do this myself. It is kinda tricky, cause these operations always return None,
@@ -146,9 +147,6 @@ def parseTokensToStatements(tokenlist : List[Token], statementlist : List[Statem
 
     token, *rest = tokenlist
     
-    # print("\ncur_token: ", token)
-    # print("statementlist: ", statementlist)
-    # print("cur_statement: ", cur_statement)
     # This part of the function adds fucntion parameters to a certain function and and if the current 
     # token is a Token::CloseFunParam, the completed fucntion gets added to the List[Statement] or to the Statement::Mathstatement if it needs an rvalue
     if cur_statement is not None:
@@ -223,12 +221,5 @@ def parseInScopes(statementlist : List[Statement], cur_scope : Scope):
     return parseInScopes(rest, cur_scope.add_statement(statement))
  
 # Parse :: List[Token] -> String -> List[Statement]
-def Parse(tokenlist : List[Token], last_token :Token = None):
-    # if last_token is not None:
-        # return parseInScopes(parseTokensToStatements(tokenlist, [], last_token, None)[1], Scope())
-    # else:
+def Parse(tokenlist : List[Token]):
     return parseInScopes(parseTokensToStatements(tokenlist, [], None, None)[1], Scope())
-
-                                                   
-
-
