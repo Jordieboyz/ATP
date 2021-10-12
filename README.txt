@@ -9,7 +9,7 @@ Some of these operators can be combinated, but that is more of a feature.
 
 my language supports:
 
-assigning variables and numbers
+assigning variables and numbers 
 using operators( -, +, *, /, %) 
 loops                           
 if-statements                   
