@@ -1,4 +1,3 @@
-from typing import List
 from Parser import MathStatement
 from tokens import Is, Number, Variable, Add, Minus ,Times, Divide, Modulo, CloseLoop, OpenLoop
 from Parser import Parse, ConditionsLoop, IfStatement, ReturnFunc, Function, Scope
@@ -56,7 +55,8 @@ class ProgramState:
                 elif isinstance(name, Variable):
                     if isinstance(value, Variable):
                         self.cells[name.content] = self.cells[value.content]
-                       
+        return self
+                           
                             
     def op_on_var(self, name : str, operator, value : int):
         make_exec = lambda l, o, r: l.__str__() + o.__str__() + r.__str__()          
@@ -77,7 +77,7 @@ class ProgramState:
                         if name.content in self.cells:
                             if type(operator) in exec_dict:
                                 exec(make_exec('self.cells[name.content]', exec_dict[type(operator)] , 'self.cells[value.content]'))
-        
+        return self
         
     def evaluate_expr(self, expr):
         if not self.returned:

@@ -2,7 +2,7 @@ n = 9
 
 .sommig(n)
 
-#
+# 
 
 func_ sommig(n)>
     result = 0

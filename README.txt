@@ -100,7 +100,7 @@ all characters and their fucntion:
     
     
 
-
+link to explaining: https://youtu.be/fgYMcvStBdg
 
 
  
