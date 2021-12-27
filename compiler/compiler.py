@@ -80,9 +80,6 @@ def start_compiling( ast, func_decl, label_name, routine_dict, last):
 
     return start_compiling(rest, func_decl, label_name, routine_dict, last)
     
-    
-    
-    
 def prettyPrinter(rDict, opened_file):
     for init in rDict["init"]:
         opened_file.write(init + "\n")
@@ -96,15 +93,14 @@ def prettyPrinter(rDict, opened_file):
     
     
 def compile_as(ast, func_decl, filename):
-    routine_dict = { "init" : [], "_start" : ["push { lr }"] }
-    # init_file = "_start:\n\tpush { lr }\n"
-    routine_dict = start_compiling(ast, func_decl, "_start", routine_dict, None)
+    routine_dict = { "init" : [], "start" : ["push { lr }"] }
+
+    routine_dict = start_compiling(ast, func_decl, "start", routine_dict, None)
     
-    routine_dict["init"].append(".global _start")
+    routine_dict["init"].append(".global start")
     routine_dict["init"].append(".section .text")
     routine_dict["init"].append(".cpu cortex-m0")
     routine_dict["init"].append(".align 1")
-    # routine_dict["init"].append(".thumb\n")
     
     FILE=open("out.asm", "w")
     prettyPrinter(routine_dict, FILE)
