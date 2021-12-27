@@ -113,6 +113,7 @@ def runFunction( state: ProgramState, output : int):
 
             tokens = Parse(f)[1]
             state.cur_func.func_scope.statements = tokens.statements[1:]
+            # print(tokens.statements[1:])
             state.add_to_mem(tokens.statements[0].func_params[0], state.cur_func.func_params[0])
             state.last_statement = None
             state.cur_loop = None

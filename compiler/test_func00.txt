@@ -1,5 +1,8 @@
-l = 8
-.even(l)
+n = 8
+
+.odd(n)
+
+
 
 # 
 
@@ -12,5 +15,5 @@ func_ odd(number)>
 func_ even(number)>
     number $eq 0 > .1 < 
     number - 1
-    .odd(number)
+    .odd( number)
 <

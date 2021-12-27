@@ -2,7 +2,7 @@ import re
 from functools import reduce
 from lexer import lex
 from Parser import Parse
-from progState import ProgramState, runCode
+from compiler import compile_as
         
 # The 2 function create the "function declarations" for functions defined AFTER the '#' in the test-file.
 # The output of these functions combined is a Tuple: (String, List[Token])
@@ -18,7 +18,7 @@ def make_list_for_func_declarations(func):
 def create_func_declarations(function_content):
     return list( re.finditer(r'func_ (\w+)', function_content ))
 
-
+OUTPUT_FILE_NAME = "out.asm"
 FILE_NAME = "test_func00.txt"
 
 content = reduce(lambda x, y: x + y, open(FILE_NAME, "r").readlines())
@@ -27,6 +27,5 @@ lexed = lex(content)
 
 _, parsed = Parse(lexed)
 
-print(parsed)
-print(runCode(parsed, 0, ProgramState(                                       \
-              create_func_declarations([], content.split('#')[1])), None)[1])
+# print( parsed.statements)
+compile_as(parsed.statements, create_func_declarations([], content.split('#')[1]), OUTPUT_FILE_NAME)
