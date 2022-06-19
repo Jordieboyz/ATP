@@ -1,4 +1,5 @@
 import re
+import sys
 from functools import reduce
 from lexer import lex
 from Parser import Parse
@@ -19,7 +20,7 @@ def create_func_declarations(function_content):
     return list( re.finditer(r'func_ (\w+)', function_content ))
 
 
-FILE_NAME = "test_func00.txt"
+FILE_NAME = sys.argv[1]
 
 content = reduce(lambda x, y: x + y, open(FILE_NAME, "r").readlines())
 
@@ -27,6 +28,5 @@ lexed = lex(content)
 
 _, parsed = Parse(lexed)
 
-print(parsed)
 print(runCode(parsed, 0, ProgramState(                                       \
               create_func_declarations([], content.split('#')[1])), None)[1])

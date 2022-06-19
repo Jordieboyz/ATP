@@ -1,23 +1,21 @@
-#############################################################################
-#
-# Project Makefile
-#
-# (c) Wouter van Ooijen (www.voti.nl) 2016
-#
-# This file is in the public domain.
-# 
-#############################################################################
+# makefile which links to a makefile with some arduino specific settings
 
-# source files in this project (main.cpp is automatically assumed)
-SOURCES := out.asm
+# SOURCES and HEADERS are used to build and compile the whole project
+# SEARCH are folders/paths where to find files
+# CLEAN is just for the cleanup 
 
-# header files in this project
-HEADERS :=
+SOURCES := $(wildcard tests/*.asm)
+SOURCES += UART_due.cpp 
 
-# other places to look for files for this project
-SEARCH  := 
+HEADERS := UART_due.h 
+HEADERS += waitable.h 
 
-# set RELATIVE to the next higher directory 
-# and defer to the Makefile.* there
-RELATIVE := ..
-include $(RELATIVE)/Makefile.due
+# paths to look for additional files in the project
+SEARCH  := UART 
+SEARCH 	+= include
+
+TESTSDIR := tests
+TESTDEF  := -DUNIT_TESTS
+
+RELATIVE	      ?= ../
+include           $(RELATIVE)Makefile.ardue
